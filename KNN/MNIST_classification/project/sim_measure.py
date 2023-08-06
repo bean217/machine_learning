@@ -31,7 +31,7 @@ def chebyshev(a, b):
 
     @returns: float64 representing the chebyshev distance between a and b
     """
-    return max(np.abs(np.asarray(a) - np.asarray(b)))
+    return max(np.abs(np.asarray(a).flatten() - np.asarray(b).flatten()))
 
 
 def p_norm(a, b, p):
@@ -46,10 +46,10 @@ def p_norm(a, b, p):
     if p < 0:
         raise Exception("p must be a positive real number")
     
-    return np.sum(np.abs(np.asarray(a) - np.asarray(b)) ** p) ** (1./p)
+    return np.sum(np.abs(np.asarray(a).flatten() - np.asarray(b).flatten()) ** p) ** (1./p)
 
 
-def cosine_sim(a, b) -> float:
+def cosine(a, b) -> float:
     """Calculates the cosine similarity of two vectors
 
     @param a: number/python array/numpy vector a
@@ -59,17 +59,21 @@ def cosine_sim(a, b) -> float:
     """
 
     # convert a and b to vectors, because they may be numbers
-    vec_a = np.asarray(a)
-    vec_b = np.asarray(b)
+    vec_a = np.asarray(a).flatten()
+    vec_b = np.asarray(b).flatten()
+
     # calculate their individual magnitudes
     mag_a = np.sqrt(np.sum(vec_a ** 2))
     mag_b = np.sqrt(np.sum(vec_b ** 2))
-    # normalize and return cosine similarity
-    return np.inner(vec_a, vec_b) / (mag_a * mag_b)
 
+    # normalize and return cosine similarity
+    return np.sum(vec_a * vec_b) / (mag_a * mag_b)
+
+
+#### TESTING ####
 
 def main():
-    print(chebyshev([1, 1, 0], [0, 1, 1]))
+    print(cosine([1, 1, 0], [0, 1, 1]))
 
 
 if __name__ == "__main__":
