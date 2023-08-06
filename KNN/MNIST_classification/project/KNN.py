@@ -55,6 +55,16 @@ class KNN:
         self.eval_info = None
     
 
+    def set_num_neighbors(self, new_n):
+        self.__n = new_n
+
+    
+    def set_sim_measure(self, new_sim = "L2"):
+        sm, name = select_sim_measure(new_sim)
+        self.__sm = sm
+        self.__sm_name = name
+
+
     def fit(self, data, labels):
         """Fits training data to the model
         @param data: array of training data inputs
@@ -100,6 +110,7 @@ class KNN:
             of which are stored in self.eval_info.
             @param v_data: input data of validation set
             @param v_labels: labels of validation set
+            @returns: accuracy
         """
         test_data = np.asarray(v_data)
         test_labels = np.asarray(v_labels)
@@ -128,6 +139,9 @@ class KNN:
             "correct": correct,
             "incorrect": incorrect}
         
+        # return accuracy
+        return correct / (correct + incorrect)
+
 
     def eval_report(self):
         """Displays the evaludation report based on the most recent call to self.evaluate.
