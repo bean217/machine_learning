@@ -56,10 +56,36 @@ class ANN:
         return outputs
     
 
-    def backprop(self):
+    def backprop(self, batch_indices, learning_rate):
+        """Performs backpropagation on a batch of training data
+        
+        """
         if self.data == None or self.labels == None:
             raise Exception("Network must have training data to perform backpropagation")
         
+
+    def train(self, epochs: int, batch_size: int, learning_rate: float):
+        """Trains the neural network based on the given hyperparameters
+            @param epochs: number of epochs, aka learning iterations
+            @param batch_size: size of each training batch in each epoch
+            @param learning_rate: step size of learning for gradient descent
+            @returns: two arrays containing total network error for training set and
+                validation set data for each epoch
+        """
+        if self.data == None or self.labels == None:
+            raise Exception("Cannot train due to missing training data and labels")
+
+        # if batch_size > amount of training data, then set batch size to training data size
+        bs = self.data.shape[0] if batch_size > self.data.shape[0] else batch_size
+
+        training_error = []
+
+        for e in range(epochs):
+            # generate indices of random training data sample/mini-batch
+            batch_indices = np.random.choice(self.data.shape[0], batch_size, replace=False)
+            training_error.append(self.backprop(batch_indices, learning_rate))
+        
+        return (training_error, )
 
 
 class Layer:
@@ -79,7 +105,13 @@ class Layer:
 
 def main():
     ann = ANN((2, 3, 2))
-    print(ann.forward(np.asarray([1, 1])))
+    #print(ann.forward(np.asarray([1, 1])))
+    
+    l = np.asarray([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+
+    idxs = np.random.choice(l.shape[0], 2, replace=False) 
+    print(l[idxs])
+    
     pass
 
 if __name__ == "__main__":
