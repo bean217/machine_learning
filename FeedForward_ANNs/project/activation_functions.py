@@ -31,8 +31,8 @@ d_tanh = lambda x: 1 - tanh(x) ** 2
 # SOFTMAX
 # https://www.mldawn.com/the-derivative-of-softmaxz-function-w-r-t-z/
 
-softmax = lambda l, x: np.exp(x) / sum(np.exp(l))
+softmax = lambda x: np.exp(x) / sum(np.exp(x))
 
-def d_softmax(l, x):
-    act = softmax(l, x)
+def d_softmax(x):
+    act = softmax(x)
     return act * (1 - act)
