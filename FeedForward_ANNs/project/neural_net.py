@@ -1,7 +1,34 @@
 import numpy as np
 
+from activation_functions import sigmoid, d_sigmoid
+from activation_functions import relu, d_relu
+from activation_functions import tanh, d_tanh
+from activation_functions import softmax, d_softmax
+
+from error_functions import mse, mse_l_esig, mse_h_esig
+from error_functions import bce
+from error_functions import mce, mce_l_esig, mce_h_esig
+
+from training_functions import Train_Funcs
+
+def train_test_split(data: np.ndarray, labels: np.ndarray, validation_percentage: float = 0.33):
+    """Splits training data into a training and validation set
+        @params data: training data inputs
+        @params labels: training data labels
+        @params validation_percentage: percentage of training data to use as validation
+        @returns: 4-tuple with (training_data, training_labels, validation_data, validation_labels)
+    """
+    # get number of validation points based on percentage
+    num_validation = int(data.shape[0] * validation_percentage)
+    # get validation data points from training data
+    validation_indices = np.random.choice(data.shape[0], num_validation, replace=False)
+    # return (training_data, training_labels, validation_data, validation_labels)
+    return (np.delete(data, validation_indices), np.delete(labels, validation_indices), 
+            data[validation_indices], labels[validation_indices])
+
+
 class ANN:
-    def __init__(self, architecture: tuple):
+    def __init__(self, training_functions: Train_Funcs, architecture: tuple):
         """Creates a feed forward neural network model based on an architecture
             @param architecture: list of integers containing number of neurons in each layer
         """
@@ -13,14 +40,82 @@ class ANN:
         for i in range(len(architecture)-1):
             self.layers.append(Layer((architecture[i], architecture[i+1])))
 
-        # instantiate activation function to None (to be set later)
-        self.act = lambda x: 1/(1 + np.exp(-x))#None
-        self.data = None
-        self.labels = None
+        # training functions
+        self.tfs = training_functions
 
 
-    def fit(self, data: np.ndarray, labels: np.ndarray):
-        # Check to make sure training data and labels are compatible with the network architecture
+    def forward(self, x: np.ndarray):
+        """Performs a forward pass through the network
+            @param x: data instance serving as the network input
+            @returns: an array of the network's input and outputs through each layer
+        """
+        if self.tfs == None:
+            raise Exception("Activation function not set")
+        # keep track of inputs/outputs as they propagate through layers
+        outputs = [x]
+        inputs = []
+        curr = x
+        for l in self.layers:
+            # pad with 1 for bias
+            curr = np.concatenate(([1], curr))
+            # get input and output of layer
+            input_sum = np.asarray([curr @ l.weights[i,:] for i in range(l.dim_out)])
+            curr = self.tfs.act(input_sum)
+            # append to inputs and outputs
+            inputs.append(input_sum)
+            outputs += [curr]
+        return inputs, outputs
+    
+
+    def backprop(self, batch_X, batch_y, learning_rate):
+        """Performs backpropagation on a batch of training data
+            @param batch_X: training data input batch
+            @param train_y: training data labels batch
+            @returns: error of network after adaptation
+        """
+        # set delta_weights - list of layer weight matrices update values
+        del_w = [np.zeros(shape=layer.weights.shape) for layer in self.layers]
+
+        # calculate the error signal of the last layer
+        for i in range(batch_X.shape[0]):
+            # perform forward pass on training data instance
+            ins, out = self.forward(batch_X[i])
+            
+            
+            # # get network error for the training data instance
+            # err = self.tfs.err(batch_y[i], out[-1])
+            
+            # calculate input for each neuron in the last layer
+
+            # calculate the error signal of the last layer
+            # pass in predicted output, layer output, and layer inputs
+            e_sig = self.tfs.L_esig(batch_y[i], out[-1], ins[-1])
+            
+            for j in range(len(self.layers), -1, -1):
+                # calculate change in weights for this layer
+                del_w[j] += np.asarray([-learning_rate * e_sig[k] * out[j] for k in range(e_sig.shape[0])])
+                # get the previous layer's error signal
+                # pass in successor layer's error signal, the layer's activations, 
+                #   and the weight matrix between the layer and it's successor layer
+                e_sig = self.tfs.H_esig(e_sig, self.layers[j].weights, ins[j-1])
+        
+        # after all weight updates have been found, apply them
+        for i in range(len(self.layers)):
+            self.layers[i].weights += del_w[i]
+
+
+
+
+    def train(self, epochs: int, batch_size: int, learning_rate: float, 
+              data: np.ndarray, labels: np.ndarray, validation_percentage: float = 0.33):
+        """Trains the neural network based on the given hyperparameters
+            @param epochs: number of epochs, aka learning iterations
+            @param batch_size: size of each training batch in each epoch
+            @param learning_rate: step size of learning for gradient descent
+            @returns: two arrays containing total network error for training set and
+                validation set data for each epoch
+        """
+        # First check to make sure training data and labels are compatible with the network architecture
         if data.shape[0] < 1:
             raise Exception("Training data must not be empty")
         if len(data.shape) != 2:
@@ -31,61 +126,32 @@ class ANN:
             raise Exception("Training data must have the same input dimensionality as the network")
         if labels.shape[1] != self.layers[-1].weights.shape[1]-1:
             raise Exception("Training labels must have the same output dimensionality as the network")
-        # Set network training data properties
-        self.data = data
-        self.labels = labels
 
-
-    def forward(self, x: np.ndarray):
-        """Performs a forward pass through the network
-            @param x: data instance serving as the network input
-            @returns: an array of the network's input and outputs through each layer
-        """
-        if self.act == None:
-            raise Exception("Activation function not set")
-        # keep track of inputs/outputs as they propagate through laters
-        outputs = [x]
-        curr = x
-        for l in self.layers:
-            # pad with 1 for bias
-            curr = np.concatenate(([1], curr))
-            # get output of layer
-            curr = np.asarray([self.act(curr @ l.weights[i,:]) for i in range(l.dim_out)])
-            # append to outputs
-            outputs.append([curr])
-        return outputs
-    
-
-    def backprop(self, batch_indices, learning_rate):
-        """Performs backpropagation on a batch of training data
-        
-        """
-        if self.data == None or self.labels == None:
-            raise Exception("Network must have training data to perform backpropagation")
-        
-
-    def train(self, epochs: int, batch_size: int, learning_rate: float):
-        """Trains the neural network based on the given hyperparameters
-            @param epochs: number of epochs, aka learning iterations
-            @param batch_size: size of each training batch in each epoch
-            @param learning_rate: step size of learning for gradient descent
-            @returns: two arrays containing total network error for training set and
-                validation set data for each epoch
-        """
-        if self.data == None or self.labels == None:
-            raise Exception("Cannot train due to missing training data and labels")
+        # split up training data into training and validation
+        train_X, train_y, test_X, test_y = train_test_split(data, labels, validation_percentage)
 
         # if batch_size > amount of training data, then set batch size to training data size
         bs = self.data.shape[0] if batch_size > self.data.shape[0] else batch_size
 
+        # set plot interval (this step is not necessary for training)
+        plot_interval = epochs
+        if plot_interval > 100:
+            plot_interval /= 100
+
         training_error = []
+        validation_error = []
 
         for e in range(epochs):
             # generate indices of random training data sample/mini-batch
-            batch_indices = np.random.choice(self.data.shape[0], batch_size, replace=False)
-            training_error.append(self.backprop(batch_indices, learning_rate))
+            batch_indices = np.random.choice(self.train_X.shape[0], batch_size, replace=False)
+            error = self.backprop(train_X[batch_indices], train_y[batch_indices], learning_rate)
+
+            # use this section for plotting error during training
+            if e % plot_interval == 0:
+                training_error.append(error)
+                validation_error.append(sum([self.tfs.err(test_X[i], test_y[i]) for i in range(test_X.shape[0])]))
         
-        return (training_error, )
+        return (training_error, validation_error)
 
 
 class Layer:
@@ -104,14 +170,20 @@ class Layer:
         pass
 
 def main():
-    ann = ANN((2, 3, 2))
+    # set training function parameters
+    sigmoid = lambda x: 1/(1+np.exp(-x))
+    d_sigmoid = lambda x: sigmoid(x) * (1 - sigmoid(x))
+    err = lambda y, y_pred: ((y - y_pred) ** 2)/2
+    tfs = Train_Funcs(sigmoid, d_sigmoid, err, None, None)
+    # create network
+    ann = ANN(tfs, (2, 3, 2))
     #print(ann.forward(np.asarray([1, 1])))
     
     l = np.asarray([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
     idxs = np.random.choice(l.shape[0], 2, replace=False) 
     print(l[idxs])
-    
+
     pass
 
 if __name__ == "__main__":
