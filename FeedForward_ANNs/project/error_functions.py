@@ -23,7 +23,7 @@ bce = lambda y, y_pred: -y*np.log(y_pred) - (1-y)*np.log(y_pred)
 
 ### MULTIPLE CROSS ENTROPY
 
-mce = lambda y, y_pred: -sum(y*np.log(y_pred))
+mce = lambda y, y_pred: -y*np.log(y_pred)
 
 # MCE Last Layer Error Signal
 

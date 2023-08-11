@@ -170,7 +170,8 @@ class Layer:
             @param architecture: 2-tuple representing (dim_in, dim_out) dimensions
         """
         # weights represents the weight matrix w_(k, k-1)
-        self.weights = np.ones(shape=(architecture[1], architecture[0]+1)) * 1.5#TODO: CHANGE BACK: np.random.normal(size=(architecture[1], architecture[0]+1))
+        #self.weights = np.ones(shape=(architecture[1], architecture[0]+1)) * 1.5
+        self.weights = np.random.normal(size=(architecture[1], architecture[0]+1))
         self.dim_in = architecture[0]
         self.dim_out = architecture[1]
         print(self.weights)
@@ -186,20 +187,21 @@ def main():
 
     # create network
     ann = ANN(mean_square_error_sigmoid, (2, 2, 1))
-    
+
     res = ann.forward(np.asarray([1, 1]))
 
     print("ins", res[0])
     print("outs", res[1])
     
-
+    bs = 2
     for i in range(2500):
-        x = np.array([[1, 1], [1, 0], [0, 1], [0, 0]])
-        l = np.array([1, 0, 0, 0])
+        x = np.array([[0, -.5], [-.5, 0], [0, .5], [.5, 0]])
+        l = np.array([0, 0, 1, 1])
+        
         for j in range(4):
 
-            err = ann.backprop(np.array(x[j]),
-                         np.array(l[j]),
+            err = ann.backprop(x[0:bs],
+                         l[0:bs],
                          0.1)
         if i == 0 or i == 2499:
             print("ERROR:", err)
