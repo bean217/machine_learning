@@ -21,13 +21,12 @@ def train_test_split(data: np.ndarray, labels: np.ndarray, validation_percentage
 
 
 def plot_errs(train_errs: np.ndarray, validation_errs: np.ndarray):
-    print(validation_errs[0:5])
-    print(validation_errs[0:5][:,1])
-    # plt.plot(train_errs[:,0], train_errs[:,1])
-    # plt.plot(validation_errs[:0], validation_errs[:,1])
-    # plt.xlabel("Epoch (e)")
-    # plt.ylabel("Net Network Error")
-    # plt.show()
+    plt.plot(train_errs[:,0], train_errs[:,1])
+    print(train_errs.shape)
+    plt.plot(validation_errs[:,0], validation_errs[:,1])
+    plt.xlabel("Epoch (e)")
+    plt.ylabel("Net Network Error")
+    plt.show()
 
 
 class ANN:
@@ -167,7 +166,7 @@ class ANN:
             # use this section for plotting error during training
             if e % plot_interval == 0 or e == epochs-1:
                 training_error.append((e, error))
-                validation_error.append((e, self.tfs.err(self.forward(test_X[i])[1][-1], test_y[i])) for i in range(test_X.shape[0]))
+                validation_error.append((e, sum([self.tfs.err(test_y[i], self.forward(test_X[i])[1][-1]) for i in range(test_X.shape[0])])))
 
         return (np.asarray(training_error), np.asarray(validation_error))
 
@@ -213,7 +212,7 @@ def main():
     #     print("ERROR:", err)
     train_errs, validation_errs = ann.train(epochs = 200,
               batch_size = 2,
-              learning_rate = 0.1,
+              learning_rate = 0.001,
               data = x,
               labels = l,
               validation_percentage = 0.25)
