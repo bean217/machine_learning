@@ -1,27 +1,22 @@
 import numpy as np
 
-class test:
-    def __init__(self):
-        print("made")
-
-    def myfunc(self, x, y):
-        print("hi")
-
-    def myfunc(self, x):
-        print("hello")
-
 def main():
     # l = np.asarray([1, 2, 3, 4])
 
     # a = np.asarray([3, 2])
 
     # print(np.asarray([l * a[i] for i in range(len(a))]))
-
-    c = test()
-
-    c.myfunc(1)
-    c.myfunc(1, 2)
-
+    x = np.asarray([[1, 2], [3, 4], [5, 6], [7, 8]])
+    y = np.asarray([1, 2, 3, 4])
+    idxs = np.asarray([1])
+    print(x)
+    print(y)
+    print(x[idxs])
+    print(y[idxs])
+    print(np.delete(x, idxs, 0))
+    print(np.delete(y, idxs, 0))
+    print(x)
+    print(y)
 
 if __name__ == "__main__":
     main()
