@@ -2,31 +2,17 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from training_functions import Train_Funcs
-from training_functions import mean_square_error_sigmoid, mean_square_error_relu, mean_square_error_tanh, multiple_cross_entropy_softmax
-
-
-def train_test_split(data: np.ndarray, labels: np.ndarray, validation_percentage: float = 0.33):
-    """Splits training data into a training and validation set
-        @params data: training data inputs
-        @params labels: training data labels
-        @params validation_percentage: percentage of training data to use as validation
-        @returns: 4-tuple with (training_data, training_labels, validation_data, validation_labels)
-    """
-    # get number of validation points based on percentage
-    num_validation = int(data.shape[0] * validation_percentage)
-    # get validation data points from training data
-    validation_indices = np.random.choice(data.shape[0], num_validation, replace=False)
-    # return (training_data, training_labels, validation_data, validation_labels)
-    return (np.delete(data, validation_indices, 0), np.delete(labels, validation_indices, 0), 
-            data[validation_indices], labels[validation_indices])
 
 
 def plot_errs(train_errs: np.ndarray, validation_errs: np.ndarray):
+    """Plots the average error of the network, as determined by the desired error function
+        @param train_errs: matrix of (epoch, average training error)
+        @param validation_errs: matrix of (epoch, average validation error)
+    """
     plt.plot(train_errs[:,0], train_errs[:,1])
-    print(train_errs.shape)
     plt.plot(validation_errs[:,0], validation_errs[:,1])
     plt.xlabel("Epoch (e)")
-    plt.ylabel("Net Network Error")
+    plt.ylabel("Average Net Network Error")
     plt.show()
 
 
@@ -103,8 +89,6 @@ class ANN:
             # # get network error for the training data instance
             err_tot += self.tfs.err(batch_y[i], out[-1]) # sum up over all output neurons
             
-            # calculate input for each neuron in the last layer
-
             # calculate the error signal of the last layer
             # pass in predicted output, layer output, and layer inputs
             e_sig = self.tfs.L_esig(ins[-1], batch_y[i], out[-1])
@@ -131,7 +115,7 @@ class ANN:
 
 
     def train(self, epochs: int, batch_size: int, learning_rate: float, 
-              data: np.ndarray, labels: np.ndarray, validation_percentage: float = 0.33):
+              train_X: np.ndarray, train_y: np.ndarray, test_X: np.ndarray, test_y: np.ndarray):
         """Trains the neural network based on the given hyperparameters
             @param epochs: number of epochs, aka learning iterations
             @param batch_size: size of each training batch in each epoch
@@ -140,31 +124,28 @@ class ANN:
                 validation set data for each epoch
         """
         # First check to make sure training data and labels are compatible with the network architecture
-        if data.shape[0] < 1:
+        
+        # training and validation data cannot be empty
+        if train_X.shape[0] < 1 or test_X.shape[0] < 1:
             raise Exception("Training data must not be empty")
-        if len(data.shape) != 2:
-            raise Exception("Training instances must be vectors")
-        if data.shape[0] != labels.shape[0]:
+        
+        # training and validation data must have equal amounts of corresponding inputs/outputs
+        if train_X.shape[0] != train_y.shape[0] or test_X.shape[0] != test_y.shape[0]:
             raise Exception("Amount of training data and labels must be equal")
-        print("data",data.shape)
-        print("in_layer",self.layers[0].weights.shape)
-        if (len(data.shape) == 1 and self.layers[0].weights.shape[1]-1 != 1) \
-            or (len(data.shape) > 1 and data.shape[1] != self.layers[0].weights.shape[1]-1):
+        if (len(train_X.shape) == 1 and self.layers[0].weights.shape[1]-1 != 1) \
+            or (len(train_X.shape) > 1 and train_X.shape[1] != self.layers[0].weights.shape[1]-1) \
+            or (len(test_X.shape) == 1 and self.layers[0].weights.shape[1]-1 != 1) \
+            or (len(test_X.shape) > 1 and test_X.shape[1] != self.layers[0].weights.shape[1]-1):
             raise Exception("Training data must have the same input dimensionality as the network")
-        print("labels",labels.shape)
-        print("out_layer",self.layers[-1].weights.shape)
-        if (len(labels.shape) == 1 and self.layers[-1].weights.shape[0] != 1) \
-            or (len(labels.shape) > 1 and labels.shape[1] != self.layers[-1].weights.shape[0]):
+        if (len(train_y.shape) == 1 and self.layers[-1].weights.shape[0] != 1) \
+            or (len(train_y.shape) > 1 and train_y.shape[1] != self.layers[-1].weights.shape[0]) \
+            or (len(test_y.shape) == 1 and self.layers[-1].weights.shape[0] != 1) \
+            or (len(test_y.shape) > 1 and test_y.shape[1] != self.layers[-1].weights.shape[0]):
             raise Exception("Training labels must have the same output dimensionality as the network")
-
-        print("DATA:",data)
-        # split up training data into training and validation
-        train_X, train_y, test_X, test_y = train_test_split(data, labels, validation_percentage)
-        print("TRAIN_X:",train_X)
 
 
         # if batch_size > amount of training data, then set batch size to training data size
-        bs = data.shape[0] if batch_size > data.shape[0] else batch_size
+        bs = train_X.shape[0] if batch_size > train_X.shape[0] else batch_size
 
         # set plot interval (this step is not necessary for training)
         plot_interval = 1
@@ -195,61 +176,6 @@ class Layer:
             @param architecture: 2-tuple representing (dim_in, dim_out) dimensions
         """
         # weights represents the weight matrix w_(k, k-1)
-        #self.weights = np.ones(shape=(architecture[1], architecture[0]+1)) * 0.5
         self.weights = np.random.normal(size=(architecture[1], architecture[0]+1))
         self.dim_in = architecture[0]
         self.dim_out = architecture[1]
-        print(self.weights)
-        print(self.weights.shape)
-        pass
-
-def main():
-    # set training function parameters
-    # sigmoid = lambda x: 1/(1+np.exp(-x))
-    # d_sigmoid = lambda x: sigmoid(x) * (1 - sigmoid(x))
-    # err = lambda y, y_pred: ((y - y_pred) ** 2)/2
-    # tfs = Train_Funcs(sigmoid, d_sigmoid, err, None, None)
-
-    # create network
-    ann = ANN(mean_square_error_sigmoid, (2, 1))
-
-    bs = 1
-    x = np.array([[0, -.5], [-.5, 0], [0, .5], [.5, 0]])
-    l = np.array([0, 0, 1, 1])
-
-    res = ann.forward(x[0:bs][0])
-
-    print("ins", res[0])
-    print("outs", res[1])
-    
-    # for i in range(1):#2500):
-
-    #     err = ann.backprop(x[0:bs], l[0:bs], 0.1)
-    #     print("ERROR:", err)
-    train_errs, validation_errs = ann.train(epochs = 10000,
-              batch_size = 2,
-              learning_rate = 0.01,
-              data = x,
-              labels = l,
-              validation_percentage = 0.25)
-
-    res = ann.forward(x[0:bs][0])
-
-    print("ins", res[0])
-    print("outs", res[1])
-
-    print(ann.layers[0].weights)
-    #print(ann.layers[1].weights)
-
-    print("plotting")
-    plot_errs(train_errs, validation_errs)
-
-    # l = np.asarray([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-
-    # idxs = np.random.choice(l.shape[0], 2, replace=False) 
-    # print(l[idxs])
-
-    pass
-
-if __name__ == "__main__":
-    main()
