@@ -1,5 +1,9 @@
-import numpy as np
-from typing import Callable
+# File: transition_functions.py
+# Author: Benjamin Piro, benpiro1118@gmail.com
+# Date: 12 August 2023
+# Description: Defines a data structure of artificial neural network training parameters
+#   and provides some predefined objects for use in instantiating one.
+#
 
 from activation_functions import softmax, d_softmax
 from activation_functions import sigmoid, d_sigmoid
@@ -37,9 +41,6 @@ class Train_Funcs:
         
     def H_esig(self, l_in, esig, weights):
         return self.__H_esig(l_in, esig, weights, self.__d_act)
-
-
-### TODO: CREATE AN **INTERFACE** SO THAT METHOD CALL STRUCTURE IS WELL-DEFINED
 
 
 ### Mean Square Error + Sigmoid

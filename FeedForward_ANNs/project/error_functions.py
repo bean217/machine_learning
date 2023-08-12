@@ -1,3 +1,10 @@
+# File: error_functions.py
+# Author: Benjamin Piro, benpiro1118@gmail.com
+# Date: 12 August 2023
+# Description: Provides pre-defined error/error signal functions for training an
+#   artificial neural network.
+#
+
 import numpy as np
 
 ##### ERROR FUNCTIONS

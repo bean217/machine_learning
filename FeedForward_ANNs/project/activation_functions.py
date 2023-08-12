@@ -1,3 +1,10 @@
+# File: activation_functions.py
+# Author: Benjamin Piro, benpiro1118@gmail.com
+# Date: 12 August 2023
+# Description: Provides pre-defined activation functions and their derivatives for
+#   performing a forward pass of an artificial neural network, as well as training one.
+#
+
 import numpy as np
 
 ##### ACTIVATION FUNCTIONS

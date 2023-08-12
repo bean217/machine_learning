@@ -1,3 +1,10 @@
+# File: main.py
+# Author: Benjamin Piro, benpiro1118@gmail.com
+# Date: 12 August 2023
+# Description: Example of using the neural network using scikit-learn's MNIST dataset.
+#   Also plots batch average network error and displays resulting network accuracy.
+#
+
 import numpy as np
 from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
@@ -21,9 +28,9 @@ def main():
         mnist.data, new_targets, test_size=0.25, random_state=123)
 
     # train the network
-    train_errs, validation_errs = ann.train(epochs = 10000,
-              batch_size = 32,
-              learning_rate = 0.001,
+    train_errs, validation_errs = ann.train(epochs = 1000000,
+              batch_size = 1,
+              learning_rate = 0.01,
               train_X = train_X,
               train_y = train_y,
               test_X = test_X,

@@ -1,3 +1,9 @@
+# File: neural_net.py
+# Author: Benjamin Piro, benpiro1118@gmail.com
+# Date: 12 August 2023
+# Description: Provides an implementation of a feed-forward artificial neural network.
+#
+
 import numpy as np
 from matplotlib import pyplot as plt
 
