@@ -1,22 +1,27 @@
 import numpy as np
+from sklearn.datasets import load_digits
+
+from neural_net import ANN, plot_errs
+from training_functions import mean_square_error_sigmoid, mean_square_error_relu, mean_square_error_tanh, multiple_cross_entropy_softmax
+
 
 def main():
-    # l = np.asarray([1, 2, 3, 4])
+    # fetch data
+    mnist = load_digits()
 
-    # a = np.asarray([3, 2])
+    new_targets = np.asarray([[0 if i != val else 1 for i in range(10)] for val in mnist.target])
 
-    # print(np.asarray([l * a[i] for i in range(len(a))]))
-    x = np.asarray([[1, 2], [3, 4], [5, 6], [7, 8]])
-    y = np.asarray([1, 2, 3, 4])
-    idxs = np.asarray([1])
-    print(x)
-    print(y)
-    print(x[idxs])
-    print(y[idxs])
-    print(np.delete(x, idxs, 0))
-    print(np.delete(y, idxs, 0))
-    print(x)
-    print(y)
+    ann = ANN(mean_square_error_sigmoid, (64, 10, 10))
+
+    train_errs, validation_errs = ann.train(epochs = 10000,
+              batch_size = 32,
+              learning_rate = 0.001,
+              data = mnist.data,
+              labels = new_targets,
+              validation_percentage = 0.2)
+    
+    plot_errs(train_errs, validation_errs)
+
 
 if __name__ == "__main__":
     main()

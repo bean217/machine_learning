@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 from training_functions import Train_Funcs
 from training_functions import mean_square_error_sigmoid, mean_square_error_relu, mean_square_error_tanh, multiple_cross_entropy_softmax
 
+
 def train_test_split(data: np.ndarray, labels: np.ndarray, validation_percentage: float = 0.33):
     """Splits training data into a training and validation set
         @params data: training data inputs
@@ -70,6 +71,17 @@ class ANN:
         return inputs, outputs
     
 
+    def activate(self, x: np.ndarray):
+        """Performs a forward pass through the network
+            @param x: data instance serving as the network input
+            @returns: the networks output
+        """
+        if self.tfs == None:
+            raise Exception("Activation function not set")
+        # return only the last output
+        return self.forward(x)[1][-1]
+    
+
     def backprop(self, batch_X, batch_y, learning_rate):
         """Performs backpropagation on a batch of training data
             @param batch_X: training data input batch
@@ -115,7 +127,7 @@ class ANN:
             self.layers[i].weights += del_w[i]
 
         # return network error
-        return err_tot
+        return err_tot / batch_X.shape[0]
 
 
     def train(self, epochs: int, batch_size: int, learning_rate: float, 
@@ -134,11 +146,15 @@ class ANN:
             raise Exception("Training instances must be vectors")
         if data.shape[0] != labels.shape[0]:
             raise Exception("Amount of training data and labels must be equal")
+        print("data",data.shape)
+        print("in_layer",self.layers[0].weights.shape)
         if (len(data.shape) == 1 and self.layers[0].weights.shape[1]-1 != 1) \
             or (len(data.shape) > 1 and data.shape[1] != self.layers[0].weights.shape[1]-1):
             raise Exception("Training data must have the same input dimensionality as the network")
-        if (len(labels.shape) == 1 and self.layers[-1].weights.shape[1]-1 != 1) \
-            or (len(labels.shape) > 1 and labels.shape[1] != self.layers[-1].weights.shape[1]-1):
+        print("labels",labels.shape)
+        print("out_layer",self.layers[-1].weights.shape)
+        if (len(labels.shape) == 1 and self.layers[-1].weights.shape[0] != 1) \
+            or (len(labels.shape) > 1 and labels.shape[1] != self.layers[-1].weights.shape[0]):
             raise Exception("Training labels must have the same output dimensionality as the network")
 
         print("DATA:",data)
@@ -166,7 +182,7 @@ class ANN:
             # use this section for plotting error during training
             if e % plot_interval == 0 or e == epochs-1:
                 training_error.append((e, error))
-                validation_error.append((e, sum([self.tfs.err(test_y[i], self.forward(test_X[i])[1][-1]) for i in range(test_X.shape[0])])))
+                validation_error.append((e, sum([self.tfs.err(test_y[i], self.forward(test_X[i])[1][-1]) for i in range(test_X.shape[0])]) / test_X.shape[0]))
 
         return (np.asarray(training_error), np.asarray(validation_error))
 
@@ -195,7 +211,7 @@ def main():
     # tfs = Train_Funcs(sigmoid, d_sigmoid, err, None, None)
 
     # create network
-    ann = ANN(mean_square_error_sigmoid, (2, 1, 1))
+    ann = ANN(mean_square_error_sigmoid, (2, 1))
 
     bs = 1
     x = np.array([[0, -.5], [-.5, 0], [0, .5], [.5, 0]])
@@ -210,9 +226,9 @@ def main():
 
     #     err = ann.backprop(x[0:bs], l[0:bs], 0.1)
     #     print("ERROR:", err)
-    train_errs, validation_errs = ann.train(epochs = 200,
+    train_errs, validation_errs = ann.train(epochs = 10000,
               batch_size = 2,
-              learning_rate = 0.001,
+              learning_rate = 0.01,
               data = x,
               labels = l,
               validation_percentage = 0.25)
@@ -223,7 +239,7 @@ def main():
     print("outs", res[1])
 
     print(ann.layers[0].weights)
-    print(ann.layers[1].weights)
+    #print(ann.layers[1].weights)
 
     print("plotting")
     plot_errs(train_errs, validation_errs)
